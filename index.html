@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>かわいいマッチ3パズル</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF6EC; --bg2:#FFEFE6; --card:#FFFFFF; --card2:#FFF9F1;
+  --ink:#3A2E2A; --muted:#8A7368; --line:#F1DDD0;
+  --pink:#FF8FAB; --pink-d:#E85D82; --butter:#FFC94D; --mint:#4ECDC4; --sky:#6EC6E8; --peach:#FFAB7A;
+  --board-bg:#FFFDF9; --cell:#FFF3E6;
+  --shadow:0 10px 30px rgba(180,110,80,.14);
+  --radius:26px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#211C22; --bg2:#2A2228; --card:#2E272E; --card2:#352D34; --ink:#FFF3E8; --muted:#CBB8AD; --line:#4A3E42; --board-bg:#2A242B; --cell:#3A3138; --shadow:0 10px 30px rgba(0,0,0,.35); }
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:"M PLUS Rounded 1c",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;min-height:44px;cursor:pointer}
+.wrap{max-width:560px;margin:0 auto;padding:14px 14px 28px}
+/* HUD */
+.toprow{display:flex;gap:8px;align-items:stretch;margin-bottom:10px}
+.pill{flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:8px 10px;text-align:center;box-shadow:var(--shadow)}
+.pill small{display:block;font-size:11px;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.pill b{font-size:20px;line-height:1.1;font-weight:800}
+.pill b.warn{color:#E85D82}
+.stars{font-size:16px;letter-spacing:2px;color:var(--butter);min-height:20px}
+/* Goals */
+.goalcard{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow);margin-bottom:12px}
+.goalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap}
+.goalhead span{font-weight:800;font-size:14px;white-space:nowrap}
+.levelnav{display:flex;gap:6px;flex:none}
+.lvlbtn{border:1.5px solid var(--line);background:var(--card2);color:var(--ink);border-radius:999px;padding:6px 12px;font-weight:800;font-size:13px;min-height:36px}
+.lvlbtn.active{background:var(--pink);border-color:var(--pink);color:#fff}
+.lvlbtn.locked{opacity:.45}
+.goals{display:flex;gap:10px;flex-wrap:wrap}
+.goal{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 6px}
+.goal .mini{width:32px;height:34px;border-radius:48% 52% 50% 50% / 40% 42% 58% 60%;display:grid;place-items:center;flex:none}
+.goal .cnt{font-weight:800;font-size:15px}
+.goal.done{outline:2px solid var(--mint)}
+.goal.done .cnt{color:#0E9A8E}
+/* Partner & Skill */
+.skillcard{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow);margin-bottom:12px}
+.skillhead{font-weight:800;font-size:14px;margin-bottom:8px}
+.partnerRow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.pbtn{width:48px;height:50px;min-height:50px;border-radius:48% 52% 50% 50% / 40% 42% 58% 60%;border:2.5px solid transparent;padding:3px;display:grid;place-items:center;background:transparent}
+.pbtn svg{width:100%;height:100%;display:block;pointer-events:none}
+.pbtn.active{border-color:var(--pink-d);box-shadow:0 0 0 3px #FFD6E2;transform:scale(1.07)}
+.skillinfo{display:flex;gap:12px;align-items:center}
+.skillface{width:64px;height:68px;border-radius:48% 52% 50% 50% / 40% 42% 58% 60%;display:grid;place-items:center;flex:none;padding:4px}
+.skillface svg{width:100%;height:100%;display:block}
+.skilltext{flex:1;min-width:0}
+.skilltext b{display:block;font-size:14.5px;line-height:1.35}
+.skilltext span{font-size:12.5px;color:var(--muted);font-weight:700}
+.gauge{height:12px;background:var(--cell);border-radius:99px;margin-top:6px;overflow:hidden}
+.gauge i{display:block;height:100%;background:var(--pink);border-radius:99px;transition:width .3s ease;width:0%}
+.gaugeLabel{font-size:12px;font-weight:800;color:var(--pink-d);margin-top:4px;min-height:16px}
+.skillBtn{width:72px;height:72px;min-height:72px;border-radius:44% 56% 52% 48% / 42% 44% 56% 58%;border:none;background:var(--butter);color:#7A4A00;font-weight:800;font-size:17px;flex:none;box-shadow:var(--shadow)}
+.skillBtn:disabled{opacity:.35;box-shadow:none}
+.skillBtn.ready{background:var(--pink);color:#fff;animation:skillPulse .55s ease-in-out infinite alternate}
+@keyframes skillPulse{from{transform:scale(1)}to{transform:scale(1.1)}}
+@media (max-width:380px){ .skillBtn{width:62px;height:62px;min-height:62px;font-size:15px} .skillface{width:54px;height:54px} .pbtn{width:42px;height:42px;min-height:42px} }
+.progress{height:8px;background:var(--cell);border-radius:99px;margin-top:10px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--butter);border-radius:99px;transition:width .4s ease;width:0%}
+/* Board */
+.boardwrap{position:relative;background:var(--board-bg);border:1.5px solid var(--line);border-radius:32px;padding:12px;box-shadow:var(--shadow)}
+.board{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;touch-action:none;user-select:none}
+.tile{aspect-ratio:.94;border-radius:48% 52% 50% 50% / 40% 42% 58% 60%;border:2px solid transparent;display:grid;place-items:center;position:relative;transition:transform .15s ease, border-color .15s;cursor:pointer;padding:3px;overflow:hidden;background:transparent}
+.tile-0{border-radius:48% 52% 50% 50% / 36% 38% 62% 64%}
+.tile-1{border-radius:44% 56% 52% 48% / 38% 40% 60% 62%}
+.tile-2{border-radius:52% 48% 50% 50% / 42% 44% 58% 56%}
+.tile-3{border-radius:46% 54% 48% 52% / 40% 38% 62% 60%}
+.tile-4{border-radius:50% 50% 52% 48% / 38% 42% 58% 62%}
+.tile-5{border-radius:47% 53% 50% 50% / 36% 38% 64% 62%}
+.tile svg{width:100%;height:100%;display:block;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(140,80,50,.20))}
+.tile.selected{border-color:#fff;box-shadow:0 0 0 3px var(--pink-d);transform:scale(1.08);z-index:2}
+.tile.hint{animation:hintPulse 0.7s ease-in-out infinite alternate}
+@keyframes hintPulse{from{box-shadow:0 0 0 0 rgba(255,201,77,.0)}to{box-shadow:0 0 0 4px var(--butter)}}
+.tile.pop{animation:popAnim .28s ease forwards}
+@keyframes popAnim{0%{transform:scale(1)}40%{transform:scale(1.25) rotate(6deg)}100%{transform:scale(0);opacity:0}}
+.tile.drop{animation:dropIn .22s ease}
+@keyframes dropIn{from{transform:translateY(-14px);opacity:.4}to{transform:translateY(0);opacity:1}}
+.combo{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);background:#fff;color:#E85D82;font-weight:800;font-size:28px;padding:8px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.18);opacity:0;pointer-events:none;white-space:nowrap;z-index:5;border:3px solid #FFD6E2}
+.combo.show{animation:comboAnim 0.9s ease forwards}
+@keyframes comboAnim{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}30%{transform:translate(-50%,-50%) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%) scale(1)}}
+.message{text-align:center;font-weight:700;font-size:14px;min-height:22px;margin:10px 4px 2px;color:var(--muted)}
+.message strong{color:var(--pink-d)}
+/* Controls */
+.controls{display:flex;gap:8px;margin-top:10px}
+.cbtn{flex:1;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-weight:800;font-size:14px;padding:10px 4px;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:var(--shadow);white-space:nowrap}
+.cbtn.primary{background:var(--pink);border-color:var(--pink);color:#fff}
+.cbtn:active{transform:scale(.97)}
+.cbtn svg{width:18px;height:18px;flex:none}
+/* Album */
+.sectionTitle{font-weight:800;font-size:16px;margin:20px 2px 8px;display:flex;align-items:center;gap:8px}
+.sectionTitle::after{content:"";flex:1;height:1.5px;background:var(--line)}
+.album{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chara{background:var(--card);border:1.5px solid var(--line);border-radius:24px;padding:10px 8px;text-align:center}
+.chara .face{width:56px;height:60px;margin:0 auto 4px;border-radius:48% 52% 50% 50% / 40% 42% 58% 60%;display:grid;place-items:center}
+.chara .face svg{width:46px;height:46px}
+.chara b{display:block;font-size:13px}
+.chara span{font-size:11px;color:var(--muted);font-weight:700}
+.howto{background:var(--card);border:1.5px solid var(--line);border-radius:24px;padding:14px 16px;font-size:13.5px;line-height:1.8;color:var(--ink)}
+.howto b{color:var(--pink-d)}
+.footerNote{text-align:center;color:var(--muted);font-size:12px;margin-top:16px;line-height:1.7}
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(40,25,30,.45);display:none;place-items:center;padding:20px;z-index:50}
+.overlay.open{display:grid}
+.modal{background:var(--card);border-radius:32px;padding:26px 22px;max-width:360px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.modal .bigface{width:92px;height:98px;margin:0 auto 8px;border-radius:48% 52% 50% 50% / 40% 42% 58% 60%;display:grid;place-items:center}
+.modal .bigface svg{width:76px;height:76px}
+.modal h2{margin:6px 0 4px;font-size:22px}
+.modal p{color:var(--muted);font-size:14px;line-height:1.7;margin:6px 0 14px}
+.modal .starsBig{font-size:30px;color:var(--butter);letter-spacing:4px}
+.modalBtns{display:flex;gap:8px}
+.modalBtns button{flex:1;border-radius:999px;font-weight:800;font-size:15px;padding:12px}
+.btnGhost{border:1.5px solid var(--line);background:var(--card2);color:var(--ink)}
+.btnMain{border:none;background:var(--pink);color:#fff}
+@media (max-width:420px){ .cbtn{font-size:12.5px;gap:4px} .cbtn svg{width:15px;height:15px} .controls{gap:6px} }
+@media (max-width:380px){ .board{gap:4px} .pill b{font-size:17px} }
+@media (prefers-reduced-motion: reduce){ *{animation-duration:.01ms !important;transition-duration:.01ms !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="toprow">
+    <div class="pill"><small>ステージ</small><b id="uiLevel">1</b></div>
+    <div class="pill"><small>のこり手数</small><b id="uiMoves">20</b></div>
+    <div class="pill"><small>スコア</small><b id="uiScore">0</b></div>
+    <div class="pill"><small>評価</small><div class="stars" id="uiStars">☆☆☆</div></div>
+  </div>
+
+  <div class="goalcard">
+    <div class="goalhead"><span>🎯 あつめるミッション</span>
+      <div class="levelnav" id="levelNav"></div>
+    </div>
+    <div class="goals" id="goals"></div>
+    <div class="progress"><i id="progBar"></i></div>
+  </div>
+
+  <div class="skillcard">
+    <div class="skillhead">⭐ パートナーをえらんでね</div>
+    <div class="partnerRow" id="partnerRow"></div>
+    <div class="skillinfo">
+      <div class="skillface" id="skillFace"></div>
+      <div class="skilltext">
+        <b id="skillName"></b>
+        <span id="skillDesc"></span>
+        <div class="gauge"><i id="gaugeBar"></i></div>
+        <div class="gaugeLabel" id="gaugeLabel"></div>
+      </div>
+      <button class="skillBtn" id="btnSkill" disabled>わざ！</button>
+    </div>
+  </div>
+
+  <div class="boardwrap">
+    <div class="board" id="board" aria-label="パズル盤面"></div>
+    <div class="combo" id="comboPop">2コンボ！</div>
+  </div>
+  <p class="message" id="message">パネルをタップして、となりと入れかえよう。同じキャラを<strong>3つ並べる</strong>と消えるよ！</p>
+
+  <div class="controls">
+    <button class="cbtn" id="btnHint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.7 1 1.5 1 2.5h6c0-1 .2-1.8 1-2.5A6 6 0 0 0 12 3z"/></svg>ヒント</button>
+    <button class="cbtn" id="btnShuffle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>シャッフル</button>
+    <button class="cbtn" id="btnSound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H3v6h3l5 4V5zM15 9a4 4 0 0 1 0 6"/></svg><span id="soundLabel">音 ON</span></button>
+    <button class="cbtn primary" id="btnRestart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>最初から</button>
+  </div>
+
+  <h3 class="sectionTitle">なかまたち ずかん</h3>
+  <div class="album" id="album"></div>
+
+  <h3 class="sectionTitle">あそびかた</h3>
+  <div class="howto">
+    <b>1.</b> となり合うパネルをタップ（またはなぞって）入れかえよう。<br>
+    <b>2.</b> 同じキャラがタテかヨコに <b>3つ以上</b> 並ぶと消えて、上のミッションが進むよ。<br>
+    <b>3.</b> <b>4つ以上</b> 同時に消すとボーナス！ 連続で消えるとコンボでスコアアップ。<br>
+    <b>4.</b> 手数がなくなる前にミッションを全部クリアするとステージクリア。次のステージに進めるよ。<br>
+    <b>5.</b> 最初に選んだ<b>パートナー</b>のキャラを消していくと「わざゲージ」がたまるよ。いっぱいになったら<b>「わざ！」ボタン</b>を押そう。キャラごとに違う固有技で、たくさん消せるよ！<br>
+    動かせる場所がなくなったら自動でシャッフルされるから、詰まることはないよ。
+  </div>
+
+  <p class="footerNote">家族で一緒に遊べる、オリジナルキャラクターのマッチ3パズルです。<br>記録はこの画面を開いている間だけ保持されます。</p>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="bigface" id="modalFace"></div>
+    <div class="starsBig" id="modalStars"></div>
+    <h2 id="modalTitle">クリア！</h2>
+    <p id="modalText"></p>
+    <div class="modalBtns">
+      <button class="btnGhost" id="modalRetry">もう一度</button>
+      <button class="btnMain" id="modalNext">次のステージへ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- Character definitions (original, hand-drawn SVG faces) ----------
+function faceSVG(kind){
+  // 参考画像のプリンうさぎのような、ツヤのあるプルっとした3D風の顔。
+  // 大きめのダークブラウンの目（ハイライトなし）、小さなお鼻とお口あり。周りの色なし・枠からはみ出さない
+  const eye='<ellipse cx="-6.4" cy="0.6" rx="2.9" ry="3.7" fill="#4A2C1A"/><ellipse cx="6.4" cy="0.6" rx="2.9" ry="3.7" fill="#4A2C1A"/>'
+    +'<path d="M-9.7 -1.7 q-1.7 -0.5 -2.4 -1.9 M9.7 -1.7 q1.7 -0.5 2.4 -1.9" stroke="#4A2C1A" stroke-width="1.05" fill="none" stroke-linecap="round"/>'
+    +'<path d="M-9.9 -5.5 q3.2 -1.8 6.1 -0.6 M9.9 -5.5 q-3.2 -1.8 -6.1 -0.6" stroke="#A9713A" stroke-width="1.05" fill="none" stroke-linecap="round" opacity=".8"/>';
+  const cheek='<ellipse cx="-10.9" cy="5.1" rx="3.1" ry="2" fill="#FF9FB2" opacity=".75"/><ellipse cx="10.9" cy="5.1" rx="3.1" ry="2" fill="#FF9FB2" opacity=".75"/>';
+  const noseMouth=function(fill){ return '<path d="M-1.35 4.5 Q0 3.8 1.35 4.5 Q0 5.8 -1.35 4.5Z" fill="'+fill+'"/><path d="M-3.1 6.4 C-3.1 8 -0.3 8.3 0 6.7 C0.3 8.3 3.1 8 3.1 6.4" stroke="#8A5A2B" stroke-width="1.1" fill="none" stroke-linecap="round"/>'; };
+  const sheen='<ellipse cx="-5.6" cy="-8.8" rx="6.6" ry="2.9" fill="#FFFFFF" opacity=".5" transform="rotate(-14 -5.6 -8.8)"/><ellipse cx="-11.8" cy="3" rx="1.8" ry="5.4" fill="#FFFFFF" opacity=".22"/>';
+  const shade='<ellipse cx="0" cy="14.3" rx="9.5" ry="1.6" fill="#8A5A2B" opacity=".10"/>';
+  // 下がふっくらしたプリン型の顔（グラデーションでプルっとした立体感を出す）
+  const body=function(gid,stroke){ return '<path d="M-10.5 -13.6 C-13.2 -13.6 -14.8 -11.3 -14.4 -6.2 C-14 0 -15.3 6.8 -13.9 12 C-12.8 15.4 -8 16.3 0 16.3 C8 16.3 12.8 15.4 13.9 12 C15.3 6.8 14 0 14.4 -6.2 C14.8 -11.3 13.2 -13.6 10.5 -13.6 Z" fill="url(#'+gid+')" stroke="'+stroke+'" stroke-width="1.1"/>'; };
+  // 頭の上にとろ〜りかかったソース（カラメル／いちご／レモン）
+  const drizzle=function(gid,stroke){ return '<path d="M-14.4 -6.2 C-14.8 -11.3 -13.2 -13.6 -10.5 -13.6 L10.5 -13.6 C13.2 -13.6 14.8 -11.3 14.4 -6.2 C14.2 -3.9 12.7 -2.4 11.1 -3.5 C9.5 -4.6 9.9 -1.9 8.1 -1.1 C6.3 -0.3 5.1 -3.4 3.3 -2.8 C1.5 -2.2 1.9 0.1 0 -0.3 C-1.9 -0.7 -1.3 -3.1 -3.1 -2.7 C-4.9 -2.3 -4.7 0.5 -6.7 0.1 C-8.7 -0.3 -8.1 -3.2 -9.9 -3.2 C-11.7 -3.2 -11.3 -0.5 -12.9 -1.1 C-14.1 -1.5 -14.3 -3.9 -14.4 -6.2 Z" fill="url(#'+gid+')" stroke="'+stroke+'" stroke-width="1"/><ellipse cx="-5.4" cy="-10.4" rx="6" ry="2.2" fill="#FFFFFF" opacity=".45" transform="rotate(-10 -5.4 -10.4)"/>'; };
+  switch(kind){
+    case 0: // プリンうさぎ：カラメルがとろけたプリンの顔、長い耳、小さなお鼻とお口
+      return '<svg viewBox="-22 -29 44 48"><defs>'
+      +'<radialGradient id="g0b" cx="45%" cy="28%" r="88%"><stop offset="0%" stop-color="#FFF8DC"/><stop offset="55%" stop-color="#FFE9A8"/><stop offset="100%" stop-color="#FFCF66"/></radialGradient>'
+      +'<linearGradient id="g0t" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFBE55"/><stop offset="100%" stop-color="#EF871C"/></linearGradient>'
+      +'<linearGradient id="g0e" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFD06E"/><stop offset="100%" stop-color="#F2A93B"/></linearGradient></defs>'
+      +'<path d="M-11.2 -10.6 C-13.2 -16.4 -13.8 -22.7 -11 -25.5 C-8.4 -28.1 -4.8 -26.3 -4.2 -21.7 C-3.7 -17.9 -4.2 -13.3 -5.1 -9.7 Z" fill="url(#g0e)" stroke="#D98E2B" stroke-width="1"/>'
+      +'<path d="M11.2 -10.6 C13.2 -16.4 13.8 -22.7 11 -25.5 C8.4 -28.1 4.8 -26.3 4.2 -21.7 C3.7 -17.9 4.2 -13.3 5.1 -9.7 Z" fill="url(#g0e)" stroke="#D98E2B" stroke-width="1"/>'
+      +'<path d="M-9.8 -12.3 C-10.9 -16.9 -11.2 -21.4 -9.5 -23.3 C-8.1 -24.9 -6.1 -23.5 -5.7 -20.5 C-5.4 -17.7 -5.8 -14.3 -6.4 -11.7 Z" fill="#FFE3AC" opacity=".9"/>'
+      +'<path d="M9.8 -12.3 C10.9 -16.9 11.2 -21.4 9.5 -23.3 C8.1 -24.9 6.1 -23.5 5.7 -20.5 C5.4 -17.7 5.8 -14.3 6.4 -11.7 Z" fill="#FFE3AC" opacity=".9"/>'
+      + body('g0b','#E3A94F') + drizzle('g0t','#D97A16') + shade + sheen + eye + cheek + noseMouth('#C06B45')
+      +'</svg>';
+    case 1: // いちごねこ：いちごソースがかかったピンクの顔、小さなお鼻とお口
+      return '<svg viewBox="-22 -23 44 42"><defs>'
+      +'<radialGradient id="g1b" cx="45%" cy="28%" r="88%"><stop offset="0%" stop-color="#FFF2F6"/><stop offset="55%" stop-color="#FFC9D9"/><stop offset="100%" stop-color="#FF9FBC"/></radialGradient>'
+      +'<linearGradient id="g1t" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FF8296"/><stop offset="100%" stop-color="#F43F63"/></linearGradient></defs>'
+      +'<path d="M-12.6 -8.2 L-14.4 -18.8 C-14.6 -20.3 -13.3 -21.2 -12 -20.4 L-4.4 -15.4 Z" fill="url(#g1b)" stroke="#E87A9C" stroke-width="1" stroke-linejoin="round"/>'
+      +'<path d="M12.6 -8.2 L14.4 -18.8 C14.6 -20.3 13.3 -21.2 12 -20.4 L4.4 -15.4 Z" fill="url(#g1b)" stroke="#E87A9C" stroke-width="1" stroke-linejoin="round"/>'
+      +'<path d="M-12.2 -11 L-13.2 -17.2 L-7.6 -13.6 Z" fill="#FFE0EA"/>'
+      +'<path d="M12.2 -11 L13.2 -17.2 L7.6 -13.6 Z" fill="#FFE0EA"/>'
+      + body('g1b','#E87A9C') + drizzle('g1t','#D92B4F')
+      +'<ellipse cx="-6" cy="-9.6" rx="1" ry="1.5" fill="#FFE3EA" transform="rotate(-18 -6 -9.6)"/><ellipse cx="2" cy="-11" rx="1" ry="1.5" fill="#FFE3EA" transform="rotate(10 2 -11)"/><ellipse cx="8.5" cy="-8.6" rx="1" ry="1.5" fill="#FFE3EA" transform="rotate(24 8.5 -8.6)"/>'
+      +'<path d="M0 -15 L0 -18.4" stroke="#3E9B4F" stroke-width="1.6" stroke-linecap="round"/>'
+      +'<path d="M0 -13.2 C-0.8 -15.9 -3.8 -17.1 -5.9 -15.9 C-4.3 -14 -2 -13.3 0 -13.2 C2 -13.3 4.3 -14 5.9 -15.9 C3.8 -17.1 0.8 -15.9 0 -13.2Z" fill="#63C96F" stroke="#3E9B4F" stroke-width=".9"/>'
+      + shade + sheen + eye + cheek + noseMouth('#E85D82')
+      +'<path d="M-15.6 1.6 h-3.6 M-15.4 5.4 l-3.6 0.9 M15.6 1.6 h3.6 M15.4 5.4 l3.6 0.9" stroke="#D9A0B2" stroke-width="1.2" stroke-linecap="round"/>'
+      +'</svg>';
+    case 2: // レモンひよこ：レモンプリンみたいな顔、お口は小さなくちばし
+      return '<svg viewBox="-22 -23 44 42"><defs>'
+      +'<radialGradient id="g2b" cx="45%" cy="28%" r="88%"><stop offset="0%" stop-color="#FFFBD6"/><stop offset="55%" stop-color="#FFEC8A"/><stop offset="100%" stop-color="#FFD94D"/></radialGradient>'
+      +'<linearGradient id="g2t" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFE066"/><stop offset="100%" stop-color="#FFBE2E"/></linearGradient></defs>'
+      +'<ellipse cx="-13.9" cy="4.5" rx="2.1" ry="4.8" fill="url(#g2b)" stroke="#E3B93B" stroke-width="1" transform="rotate(10 -13.9 4.5)"/>'
+      +'<ellipse cx="13.9" cy="4.5" rx="2.1" ry="4.8" fill="url(#g2b)" stroke="#E3B93B" stroke-width="1" transform="rotate(-10 13.9 4.5)"/>'
+      + body('g2b','#E3B93B') + drizzle('g2t','#E0A81E')
+      +'<path d="M-1 -13.4 C-2.8 -16.2 -6 -17.2 -7.8 -15.6 C-6.2 -13.8 -3.4 -13 -1 -13.4Z" fill="#FFD94D" stroke="#E3B93B" stroke-width=".9"/>'
+      +'<path d="M1.2 -13.5 C0.8 -16.6 2.2 -19 4.4 -19.5 C5.2 -16.7 3.8 -14.2 1.2 -13.5Z" fill="#FFE066" stroke="#E3B93B" stroke-width=".9"/>'
+      + shade + sheen + eye + cheek
+      +'<path d="M-2.7 5.4 Q0 4.3 2.7 5.4 Q0 8.8 -2.7 5.4Z" fill="#FF9F2E" stroke="#E87F14" stroke-width=".85"/><path d="M-2.7 5.4 Q0 6.1 2.7 5.4" stroke="#E87F14" stroke-width=".8" fill="none"/>'
+      +'</svg>';
+    case 3: // ミントくま：ミントゼリーみたいな顔、お鼻と小さなお口
+      return '<svg viewBox="-22 -23 44 42"><defs>'
+      +'<radialGradient id="g3b" cx="45%" cy="28%" r="88%"><stop offset="0%" stop-color="#EFFFF9"/><stop offset="55%" stop-color="#B9F1E2"/><stop offset="100%" stop-color="#7FD8C2"/></radialGradient></defs>'
+      +'<circle cx="-11.3" cy="-11.5" r="6" fill="url(#g3b)" stroke="#57BFA6" stroke-width="1"/>'
+      +'<circle cx="11.3" cy="-11.5" r="6" fill="url(#g3b)" stroke="#57BFA6" stroke-width="1"/>'
+      +'<circle cx="-11.3" cy="-11.5" r="2.9" fill="#E9FCF6"/>'
+      +'<circle cx="11.3" cy="-11.5" r="2.9" fill="#E9FCF6"/>'
+      + body('g3b','#57BFA6') + shade + sheen
+      +'<ellipse cx="0" cy="7.2" rx="5.9" ry="4.7" fill="#FFFFFF" opacity=".94"/>'
+      + eye + cheek
+      +'<ellipse cx="0" cy="5.5" rx="2.1" ry="1.5" fill="#4A2C1A"/>'
+      +'<path d="M0 7 L0 7.9 M0 7.9 C-0.2 9.1 -2.3 9.3 -2.7 8.2 M0 7.9 C0.2 9.1 2.3 9.3 2.7 8.2" stroke="#7A4A21" stroke-width="1.05" fill="none" stroke-linecap="round"/>'
+      +'</svg>';
+    case 4: // ももわんこ：ももプリンみたいな顔、お鼻と小さなお口
+      return '<svg viewBox="-22 -23 44 42"><defs>'
+      +'<radialGradient id="g4b" cx="45%" cy="28%" r="88%"><stop offset="0%" stop-color="#FFFBF2"/><stop offset="55%" stop-color="#FFE3C0"/><stop offset="100%" stop-color="#FFBE85"/></radialGradient>'
+      +'<linearGradient id="g4e" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFC98F"/><stop offset="100%" stop-color="#F09A52"/></linearGradient></defs>'
+      +'<ellipse cx="-13.3" cy="-0.5" rx="3.9" ry="9.3" fill="url(#g4e)" stroke="#D98A4B" stroke-width="1" transform="rotate(9 -13.3 -0.5)"/>'
+      +'<ellipse cx="13.3" cy="-0.5" rx="3.9" ry="9.3" fill="url(#g4e)" stroke="#D98A4B" stroke-width="1" transform="rotate(-9 13.3 -0.5)"/>'
+      + body('g4b','#E09A58') + shade + sheen
+      +'<ellipse cx="-6.3" cy="-1.6" rx="5.1" ry="5.8" fill="#FFD9AE" opacity=".85"/>'
+      + eye + cheek
+      +'<ellipse cx="0" cy="4.9" rx="2.5" ry="1.8" fill="#4A2C1A"/>'
+      +'<path d="M0 6.7 L0 7.6 M0 7.6 C-0.2 8.8 -2.2 9 -2.6 7.9 M0 7.6 C0.2 8.8 2.2 9 2.6 7.9" stroke="#8A5A2B" stroke-width="1.05" fill="none" stroke-linecap="round"/>'
+      +'</svg>';
+    case 5: // ソーダペンギン：ソーダゼリーみたいな顔、お口は小さなくちばし
+      return '<svg viewBox="-22 -23 44 42"><defs>'
+      +'<radialGradient id="g5b" cx="45%" cy="28%" r="88%"><stop offset="0%" stop-color="#F2FBFF"/><stop offset="55%" stop-color="#BDE7FA"/><stop offset="100%" stop-color="#82C6E8"/></radialGradient></defs>'
+      +'<ellipse cx="-13.8" cy="4.5" rx="2.2" ry="5" fill="url(#g5b)" stroke="#5FA8CC" stroke-width="1" transform="rotate(10 -13.8 4.5)"/>'
+      +'<ellipse cx="13.8" cy="4.5" rx="2.2" ry="5" fill="url(#g5b)" stroke="#5FA8CC" stroke-width="1" transform="rotate(-10 13.8 4.5)"/>'
+      + body('g5b','#5FA8CC') + shade
+      +'<ellipse cx="0" cy="4.2" rx="10.6" ry="11" fill="#FFFFFF"/>'
+      +'<ellipse cx="-4.8" cy="-6.4" rx="5.6" ry="2.6" fill="#FFFFFF" opacity=".55" transform="rotate(-14 -4.8 -6.4)"/>'
+      +'<path d="M-3.6 -12.8 Q0 -17.6 3.6 -12.8" stroke="#5BA8C9" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
+      + eye
+      +'<ellipse cx="-8.4" cy="5.1" rx="2.6" ry="1.8" fill="#FF9FB2" opacity=".75"/><ellipse cx="8.4" cy="5.1" rx="2.6" ry="1.8" fill="#FF9FB2" opacity=".75"/>'
+      +'<path d="M-2.8 5.2 Q0 4.1 2.8 5.2 Q0 8.6 -2.8 5.2Z" fill="#FFB03A" stroke="#E88F14" stroke-width=".85"/><path d="M-2.8 5.2 Q0 5.9 2.8 5.2" stroke="#E88F14" stroke-width=".8" fill="none"/>'
+      +'</svg>';
+  }
+  return '';
+}
+const CHARAS=[
+  {name:'プリンうさぎ', desc:'プリンが大好き', bg:'#FFF0B8', tileBg:'#FFF7D6'},
+  {name:'いちごねこ', desc:'あま〜いもの好き', bg:'#FFD9E4', tileBg:'#FFEDF2'},
+  {name:'レモンひよこ', desc:'元気いっぱい', bg:'#FFF3B0', tileBg:'#FFFBE0'},
+  {name:'ミントくま', desc:'のんびりやさん', bg:'#CDEEE8', tileBg:'#E9FAF6'},
+  {name:'ももわんこ', desc:'なでなで大好き', bg:'#FFDFC4', tileBg:'#FFF3E6'},
+  {name:'ソーダペンギン', desc:'海がおともだち', bg:'#CDEFFB', tileBg:'#EBF8FE'},
+];
+const LEVELS=[
+  {moves:20, goals:{0:10,1:10}, star:[700,1200]},
+  {moves:22, goals:{2:12,3:12}, star:[900,1500]},
+  {moves:24, goals:{0:14,4:12,5:10}, star:[1100,1800]},
+  {moves:25, goals:{1:16,2:14,3:14}, star:[1300,2100]},
+  {moves:28, goals:{0:14,1:14,2:12,4:12}, star:[1600,2500]},
+];
+const SKILLS=[
+  {name:'プリンウェーブ', desc:'横1列を まるごと消すよ'},
+  {name:'にくきゅうクロス', desc:'十字に たくさん消すよ'},
+  {name:'ひよこボム', desc:'まわり3×3を ドカンと消すよ'},
+  {name:'おひるねドリーム', desc:'いちばん多いキャラを 全部消すよ'},
+  {name:'わんわんダッシュ', desc:'縦1列を まるごと消すよ'},
+  {name:'ソーダバブル', desc:'ランダムに 12こ消すよ'},
+];
+const GAUGE_MAX=10;
+const COLS=8, ROWS=8, N=COLS*ROWS;
+let levelIdx=0, unlocked=0;
+let partner=0, gauge=0;
+let board=[], score=0, movesLeft=0, goalsLeft={}, totalGoal=0, gotGoal=0;
+let selected=-1, busy=false, soundOn=true, totalCollected=[0,0,0,0,0,0];
+let audioCtx=null;
+
+function $(id){return document.getElementById(id)}
+function playPop(combo){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    const t=audioCtx.currentTime;
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(520+combo*90,t); o.frequency.exponentialRampToValueAtTime(880+combo*120,t+0.12);
+    g.gain.setValueAtTime(0.14,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.16);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t+0.17);
+  }catch(e){}
+}
+function playWin(){
+  if(!soundOn) return;
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    [523,659,784,1047].forEach((f,i)=>{
+      const t=audioCtx.currentTime+i*0.13, o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type='triangle'; o.frequency.value=f;
+      g.gain.setValueAtTime(0.15,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+      o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t+0.32);
+    });
+  }catch(e){}
+}
+const rnd=()=>Math.floor(Math.random()*6);
+function idx(r,c){return r*COLS+c}
+function rc(i){return [Math.floor(i/COLS), i%COLS]}
+function wouldMatch(b,i){
+  const [r,c]=rc(i), t=b[i]; if(t<0) return false;
+  let n=1;
+  for(let cc=c-1;cc>=0&&b[idx(r,cc)]===t;cc--) n++;
+  for(let cc=c+1;cc<COLS&&b[idx(r,cc)]===t;cc++) n++;
+  if(n>=3) return true;
+  n=1;
+  for(let rr=r-1;rr>=0&&b[idx(rr,c)]===t;rr--) n++;
+  for(let rr=r+1;rr<ROWS&&b[idx(rr,c)]===t;rr++) n++;
+  return n>=3;
+}
+function findMatches(b){
+  const set=new Set();
+  for(let r=0;r<ROWS;r++){ let run=1;
+    for(let c=1;c<=COLS;c++){
+      if(c<COLS && b[idx(r,c)]===b[idx(r,c-1)] && b[idx(r,c)]>=0) run++;
+      else{ if(run>=3) for(let k=1;k<=run;k++) set.add(idx(r,c-k)); run=1; }
+    }
+  }
+  for(let c=0;c<COLS;c++){ let run=1;
+    for(let r=1;r<=ROWS;r++){
+      if(r<ROWS && b[idx(r,c)]===b[idx(r-1,c)] && b[idx(r,c)]>=0) run++;
+      else{ if(run>=3) for(let k=1;k<=run;k++) set.add(idx(r-k,c)); run=1; }
+    }
+  }
+  return set;
+}
+function hasMove(b){
+  for(let i=0;i<N;i++){
+    const [r,c]=rc(i);
+    const neigh=[];
+    if(c<COLS-1) neigh.push(i+1);
+    if(r<ROWS-1) neigh.push(i+COLS);
+    for(const j of neigh){
+      const copy=b.slice(); const tmp=copy[i]; copy[i]=copy[j]; copy[j]=tmp;
+      if(findMatches(copy).size>0) return [i,j];
+    }
+  }
+  return null;
+}
+function genBoard(){
+  let b;
+  do{
+    b=new Array(N);
+    for(let i=0;i<N;i++){ do{ b[i]=rnd(); }while(wouldMatch(b,i)); }
+  }while(!hasMove(b));
+  return b;
+}
+function updateSkillUI(){
+  $('skillFace').innerHTML=faceSVG(partner);
+  $('skillName').textContent=CHARAS[partner].name+'のわざ「'+SKILLS[partner].name+'」';
+  $('skillDesc').textContent=SKILLS[partner].desc;
+  $('gaugeBar').style.width=Math.round(gauge/GAUGE_MAX*100)+'%';
+  $('gaugeLabel').textContent = gauge>=GAUGE_MAX ? 'わざが たまったよ！ボタンを押してね' : CHARAS[partner].name+' あと '+(GAUGE_MAX-gauge)+'こ 消すと わざ！';
+  const sb=$('btnSkill');
+  sb.disabled = gauge<GAUGE_MAX || busy;
+  sb.classList.toggle('ready', gauge>=GAUGE_MAX && !busy);
+}
+function render(dropSet){
+  const el=$('board'); el.innerHTML='';
+  board.forEach((t,i)=>{
+    const d=document.createElement('div');
+    d.className='tile tile-'+t+(i===selected?' selected':'')+((dropSet&&dropSet.has(i))?' drop':'');
+    d.dataset.i=i;
+    d.innerHTML=faceSVG(t);
+    el.appendChild(d);
+  });
+  $('uiLevel').textContent=levelIdx+1;
+  $('uiMoves').textContent=movesLeft;
+  $('uiMoves').className=movesLeft<=5?'warn':'';
+  $('uiScore').textContent=score.toLocaleString();
+  const s = score>=LEVELS[levelIdx].star[1]?3:score>=LEVELS[levelIdx].star[0]?2:(gotGoal>=totalGoal?1:0);
+  $('uiStars').textContent='★★★'.slice(0,Math.max(s, gotGoal>=totalGoal?1:0))+'☆☆☆'.slice(0,3-Math.max(s, gotGoal>=totalGoal?1:0));
+  // goals
+  const g=$('goals'); g.innerHTML='';
+  Object.keys(goalsLeft).forEach(k=>{
+    const t=+k, left=goalsLeft[k];
+    const d=document.createElement('div'); d.className='goal'+(left<=0?' done':'');
+    d.innerHTML='<span class="mini">'+faceSVG(t)+'</span><span class="cnt">'+(left<=0?'クリア！':'あと '+left)+'</span>';
+    g.appendChild(d);
+  });
+  $('progBar').style.width=(totalGoal? Math.round(gotGoal/totalGoal*100):0)+'%';
+  // partner picker
+  const pr=$('partnerRow'); pr.innerHTML='';
+  CHARAS.forEach((ch,i)=>{
+    const b=document.createElement('button'); b.className='pbtn'+(i===partner?' active':'');
+    b.title=ch.name; b.setAttribute('aria-label','パートナー：'+ch.name);
+    b.innerHTML=faceSVG(i);
+    b.addEventListener('click',()=>{
+      if(busy||i===partner) return;
+      partner=i; gauge=0; render();
+      setMsg('<strong>'+ch.name+'</strong>がパートナーになったよ！ '+ch.name+'を消すと わざがたまるよ。');
+    });
+    pr.appendChild(b);
+  });
+  updateSkillUI();
+  // level nav
+  const nav=$('levelNav'); nav.innerHTML='';
+  LEVELS.forEach((_,i)=>{
+    const b=document.createElement('button'); b.className='lvlbtn'+(i===levelIdx?' active':'')+(i>unlocked?' locked':'');
+    b.textContent=(i+1); b.disabled=i>unlocked;
+    b.addEventListener('click',()=>startLevel(i));
+    nav.appendChild(b);
+  });
+  // album
+  const al=$('album'); al.innerHTML='';
+  CHARAS.forEach((ch,i)=>{
+    const d=document.createElement('div'); d.className='chara';
+    d.innerHTML='<div class="face">'+faceSVG(i)+'</div><b>'+ch.name+'</b><span>'+ch.desc+'<br>これまで '+totalCollected[i]+'こ 消したよ</span>';
+    al.appendChild(d);
+  });
+}
+function setMsg(html){ $('message').innerHTML=html; }
+function startLevel(i){
+  levelIdx=i;
+  const L=LEVELS[i];
+  movesLeft=L.moves; score=0; gotGoal=0; gauge=0;
+  goalsLeft=Object.assign({},L.goals);
+  totalGoal=Object.values(L.goals).reduce((a,b)=>a+b,0);
+  board=genBoard(); selected=-1; busy=false;
+  $('overlay').classList.remove('open');
+  render();
+  setMsg('ステージ'+(i+1)+' スタート！ パートナーの<strong>'+CHARAS[partner].name+'</strong>を消すと わざがたまるよ。');
+}
+function neighbors(a,b){
+  const [r1,c1]=rc(a),[r2,c2]=rc(b);
+  return Math.abs(r1-r2)+Math.abs(c1-c2)===1;
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+async function resolveBoard(matches){
+  let combo=0;
+  while(matches.size>0){
+    combo++;
+    // scoring & goals & skill gauge
+    let bonus = matches.size>=4 ? (matches.size-3)*30 : 0;
+    score += matches.size*10*combo + bonus;
+    matches.forEach(i=>{
+      const t=board[i];
+      totalCollected[t]++;
+      if(t===partner && gauge<GAUGE_MAX) gauge++;
+      if(goalsLeft[t]!==undefined && goalsLeft[t]>0){ goalsLeft[t]--; gotGoal++; }
+    });
+    playPop(combo);
+    if(combo>=2){
+      const cp=$('comboPop'); cp.textContent=combo+'コンボ！ +'+(matches.size*10*combo);
+      cp.classList.remove('show'); void cp.offsetWidth; cp.classList.add('show');
+    }
+    // pop animation
+    const tiles=$('board').children;
+    matches.forEach(i=>{ if(tiles[i]) tiles[i].classList.add('pop'); });
+    renderKeepScore();
+    await sleep(280);
+    // gravity
+    const removed=new Set(matches);
+    const dropSet=new Set();
+    for(let c=0;c<COLS;c++){
+      const stack=[];
+      for(let r=ROWS-1;r>=0;r--){ const i=idx(r,c); if(!removed.has(i)) stack.push(board[i]); }
+      let need=ROWS-stack.length;
+      const col=[];
+      for(let k=0;k<need;k++) col.push(rnd());
+      const full=col.concat(stack.reverse());
+      for(let r=0;r<ROWS;r++){ board[idx(r,c)]=full[r]; if(r<need+ (ROWS-stack.length)) dropSet.add(idx(r,c)); }
+    }
+    render(dropSet);
+    await sleep(160);
+    matches=findMatches(board);
+  }
+  return combo;
+}
+function afterTurn(combo, msgOverride){
+  if(gotGoal>=totalGoal){
+    score += movesLeft*20;
+    render();
+    unlocked=Math.max(unlocked, Math.min(levelIdx+1, LEVELS.length-1));
+    playWin(); showEnd(true);
+  } else if(movesLeft<=0){
+    render(); showEnd(false);
+  } else {
+    if(!hasMove(board)){
+      setMsg('<strong>動かせる場所がなくなったので、シャッフルしたよ！</strong>');
+      board=genBoard(); render();
+    } else if(msgOverride){
+      setMsg(msgOverride);
+    } else {
+      setMsg(combo>=2 ? '<strong>'+combo+'コンボ！</strong> すごい！' : 'いい感じ！ 次も消してみよう。');
+    }
+  }
+}
+function skillTargets(kind){
+  const set=new Set();
+  if(kind===0){ // プリンうさぎ：横1列
+    const r=Math.floor(Math.random()*ROWS);
+    for(let c=0;c<COLS;c++) set.add(idx(r,c));
+  } else if(kind===4){ // ももわんこ：縦1列
+    const c=Math.floor(Math.random()*COLS);
+    for(let r=0;r<ROWS;r++) set.add(idx(r,c));
+  } else if(kind===1){ // いちごねこ：十字（1行＋1列）
+    const r=Math.floor(Math.random()*ROWS), c=Math.floor(Math.random()*COLS);
+    for(let cc=0;cc<COLS;cc++) set.add(idx(r,cc));
+    for(let rr=0;rr<ROWS;rr++) set.add(idx(rr,c));
+  } else if(kind===2){ // レモンひよこ：3×3
+    const r=1+Math.floor(Math.random()*(ROWS-2)), c=1+Math.floor(Math.random()*(COLS-2));
+    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++) set.add(idx(r+dr,c+dc));
+  } else if(kind===3){ // ミントくま：いちばん多いキャラを全部
+    const cnt=[0,0,0,0,0,0];
+    board.forEach(t=>cnt[t]++);
+    let best=0;
+    for(let t=1;t<6;t++) if(cnt[t]>cnt[best]) best=t;
+    board.forEach((t,i)=>{ if(t===best) set.add(i); });
+  } else { // ソーダペンギン：ランダム12こ
+    const all=[];
+    for(let i=0;i<N;i++) all.push(i);
+    for(let k=0;k<12 && all.length>0;k++){
+      const j=Math.floor(Math.random()*all.length);
+      set.add(all.splice(j,1)[0]);
+    }
+  }
+  return set;
+}
+async function useSkill(){
+  if(busy||gauge<GAUGE_MAX) return;
+  busy=true; selected=-1; gauge=0; render();
+  const cp=$('comboPop'); cp.textContent=SKILLS[partner].name+'！';
+  cp.classList.remove('show'); void cp.offsetWidth; cp.classList.add('show');
+  playWin();
+  await sleep(400);
+  const combo=await resolveBoard(skillTargets(partner));
+  afterTurn(combo, '<strong>'+CHARAS[partner].name+'の わざ「'+SKILLS[partner].name+'」！</strong> たくさん消えたね！');
+  busy=false; render();
+}
+async function trySwap(a,b){
+  if(busy||a===b||!neighbors(a,b)) return;
+  busy=true; selected=-1;
+  const tmp=board[a]; board[a]=board[b]; board[b]=tmp; render();
+  await sleep(140);
+  let matches=findMatches(board);
+  if(matches.size===0){
+    const t2=board[a]; board[a]=board[b]; board[b]=t2; render();
+    setMsg('そこは消えないみたい。別の場所を試してみてね。');
+    busy=false; return;
+  }
+  movesLeft--;
+  const combo=await resolveBoard(matches);
+  afterTurn(combo);
+  busy=false; render();
+}
+function renderKeepScore(){
+  $('uiScore').textContent=score.toLocaleString();
+  $('uiMoves').textContent=movesLeft;
+  const g=$('goals'); g.innerHTML='';
+  Object.keys(goalsLeft).forEach(k=>{
+    const t=+k, left=goalsLeft[k];
+    const d=document.createElement('div'); d.className='goal'+(left<=0?' done':'');
+    d.innerHTML='<span class="mini">'+faceSVG(t)+'</span><span class="cnt">'+(left<=0?'クリア！':'あと '+left)+'</span>';
+    g.appendChild(d);
+  });
+  $('progBar').style.width=(totalGoal? Math.round(gotGoal/totalGoal*100):0)+'%';
+  updateSkillUI();
+}
+function showEnd(win){
+  const L=LEVELS[levelIdx];
+  const s = score>=L.star[1]?3:score>=L.star[0]?2:1;
+  $('modalFace').innerHTML=faceSVG(win?0:5);
+  $('modalStars').textContent=win?('★'.repeat(s)+'☆'.repeat(3-s)):'';
+  $('modalTitle').textContent=win?'ステージ'+(levelIdx+1)+' クリア！':'あと少しだったね';
+  $('modalText').innerHTML=win
+    ? 'スコア <b>'+score.toLocaleString()+'</b> 点！<br>'+(levelIdx<LEVELS.length-1?'次のステージが開いたよ。家族みんなで交代で遊んでみてね。':'全ステージクリア、おめでとう！ 全員のずかんも見てみてね。')
+    : 'ミッションまで あと <b>'+(totalGoal-gotGoal)+'</b> こ だったよ。<br>ヒントボタンを使うと、消せる場所が光るよ。もう一度挑戦してみよう！';
+  $('modalNext').textContent = (win && levelIdx<LEVELS.length-1) ? '次のステージへ' : 'ステージを選ぶ';
+  $('overlay').classList.add('open');
+}
+// ---- Input: tap-to-select + swipe ----
+let pStart=null;
+const boardEl=$('board');
+function tileFromEvent(e){
+  const el=document.elementFromPoint(e.clientX,e.clientY);
+  const t=el?el.closest('.tile'):null;
+  return t?+t.dataset.i:-1;
+}
+boardEl.addEventListener('pointerdown',e=>{
+  if(busy) return;
+  const i=tileFromEvent(e); if(i<0) return;
+  pStart={i,x:e.clientX,y:e.clientY};
+});
+boardEl.addEventListener('pointerup',async e=>{
+  if(busy||!pStart) return;
+  const dx=e.clientX-pStart.x, dy=e.clientY-pStart.y;
+  const startI=pStart.i; pStart=null;
+  if(Math.max(Math.abs(dx),Math.abs(dy))>24){
+    // swipe
+    const [r,c]=rc(startI);
+    let target=-1;
+    if(Math.abs(dx)>Math.abs(dy)) target = dx>0 ? (c<COLS-1?startI+1:-1) : (c>0?startI-1:-1);
+    else target = dy>0 ? (r<ROWS-1?startI+COLS:-1) : (r>0?startI-COLS:-1);
+    if(target>=0){ selected=-1; await trySwap(startI,target); }
+    return;
+  }
+  // tap
+  const i=tileFromEvent(e); const tapI=i>=0?i:startI;
+  if(selected===-1){ selected=tapI; render(); }
+  else if(selected===tapI){ selected=-1; render(); }
+  else if(neighbors(selected,tapI)){ const a=selected; selected=-1; await trySwap(a,tapI); }
+  else { selected=tapI; render(); }
+});
+// controls
+$('btnHint').addEventListener('click',()=>{
+  if(busy) return;
+  const mv=hasMove(board);
+  document.querySelectorAll('.tile.hint').forEach(t=>t.classList.remove('hint'));
+  if(mv){
+    const tiles=$('board').children;
+    tiles[mv[0]].classList.add('hint'); tiles[mv[1]].classList.add('hint');
+    setMsg('光っている2つを入れかえると消えるよ！');
+    setTimeout(()=>document.querySelectorAll('.tile.hint').forEach(t=>t.classList.remove('hint')),2200);
+  } else setMsg('動かせる場所がないみたい。シャッフルしてね。');
+});
+$('btnShuffle').addEventListener('click',()=>{
+  if(busy) return;
+  board=genBoard(); selected=-1; render();
+  setMsg('シャッフルしたよ！ 新しい並びで挑戦してみてね。');
+});
+$('btnSkill').addEventListener('click',useSkill);
+$('btnRestart').addEventListener('click',()=>startLevel(levelIdx));
+$('btnSound').addEventListener('click',()=>{
+  soundOn=!soundOn; $('soundLabel').textContent=soundOn?'音 ON':'音 OFF';
+  if(soundOn) playPop(1);
+});
+$('modalRetry').addEventListener('click',()=>startLevel(levelIdx));
+$('modalNext').addEventListener('click',()=>{
+  if(levelIdx<LEVELS.length-1 && gotGoal>=totalGoal) startLevel(levelIdx+1);
+  else $('overlay').classList.remove('open');
+});
+startLevel(0);
+</script>
+</body>
+</html>
